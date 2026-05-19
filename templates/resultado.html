@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Documento Atualizado</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="card">
+    <h1>Documento Atualizado</h1>
+    <p class="lead">Os campos abaixo foram extraídos da proposta e inseridos no modelo.</p>
+
+    <section class="campos">
+      <h2>Campos processados</h2>
+      <dl>
+        {% for chave, valor in proposta.items() %}
+          <div class="campo {{ 'vazio' if not valor else 'preenchido' }}">
+            <dt>{{ chave.replace('_', ' ')|capitalize }}</dt>
+            <dd>
+              {% if valor is iterable and valor is not string %}
+                <ul>{% for item in valor %}<li>{{ item }}</li>{% endfor %}</ul>
+              {% else %}
+                {{ valor or '(não encontrado)' }}
+              {% endif %}
+            </dd>
+          </div>
+        {% endfor %}
+      </dl>
+    </section>
+
+    <section class="acoes">
+      <a class="acao" href="{{ url_for('download', sessao_id=sessao_id) }}">Baixar .docx</a>
+      <a class="acao secundaria" href="{{ url_for('preview', sessao_id=sessao_id) }}" target="_blank">Visualizar documento</a>
+      <a class="link" href="{{ url_for('index') }}">Processar outro</a>
+    </section>
+  </main>
+</body>
+</html>

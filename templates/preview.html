@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Pré-visualização</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="preview-body">
+  <article class="folha">
+    {{ conteudo_html|safe }}
+  </article>
+</body>
+</html>

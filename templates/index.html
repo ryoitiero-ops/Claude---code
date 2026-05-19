@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Sincronizar Proposta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="card">
+    <h1>Sincronizar Proposta Comercial</h1>
+    <p class="lead">
+      Envie o PDF da proposta e o documento modelo (.docx) com placeholders.
+      Os dados são extraídos e inseridos no modelo sem alterar o layout.
+    </p>
+
+    {% with mensagens = get_flashed_messages() %}
+      {% if mensagens %}
+        <div class="alerta">
+          {% for msg in mensagens %}<p>{{ msg }}</p>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('processar') }}" method="post" enctype="multipart/form-data">
+      <label class="upload">
+        <span class="rotulo">1. Proposta em PDF</span>
+        <input type="file" name="pdf" accept="application/pdf" required>
+      </label>
+
+      <label class="upload">
+        <span class="rotulo">2. Documento modelo (.docx)</span>
+        <input type="file" name="modelo" accept=".docx" required>
+      </label>
+
+      <button type="submit" class="acao">Processar</button>
+    </form>
+
+    <details class="dica">
+      <summary>Quais placeholders o modelo precisa ter?</summary>
+      <p>No seu .docx, escreva os marcadores nos lugares onde os dados devem aparecer:</p>
+      <ul>
+        <li><code>{{ '{{CLIENTE}}' }}</code> · <code>{{ '{{EMPRESA}}' }}</code> · <code>{{ '{{CNPJ}}' }}</code></li>
+        <li><code>{{ '{{SERVICOS}}' }}</code> · <code>{{ '{{VALOR_TOTAL}}' }}</code></li>
+        <li><code>{{ '{{DATA_EMISSAO}}' }}</code> · <code>{{ '{{DATA_VALIDADE}}' }}</code></li>
+        <li><code>{{ '{{CONDICOES_PAGAMENTO}}' }}</code> · <code>{{ '{{PRAZO_ENTREGA}}' }}</code></li>
+      </ul>
+    </details>
+  </main>
+</body>
+</html>

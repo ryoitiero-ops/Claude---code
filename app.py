@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import secrets
 import tempfile
 from pathlib import Path
@@ -27,7 +28,7 @@ BASE_TMP = Path(tempfile.gettempdir()) / "proposta_sync"
 BASE_TMP.mkdir(exist_ok=True)
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(16)
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 25 MB
 
 
@@ -98,4 +99,6 @@ def download(sessao_id: str):
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    port = int(os.environ.get("PORT", 5000))
+    host = os.environ.get("HOST", "0.0.0.0")
+    app.run(host=host, port=port, debug=False)

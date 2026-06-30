@@ -193,6 +193,27 @@ User Function nfseXMLEnv( cTipo, dDtEmiss, cSerie, cNota, cClieFor, cLoja, cMotC
 	DEFAULT cLoja    := PARAMIXB[7]
 
 	//-----------------------------------------------------------------
+	// Guarda de compatibilidade dos parametros (PARAMIXB)
+	//-----------------------------------------------------------------
+	// A camada automatica de remessa (MONTAREMESSANFSE / AUTONFSEBUSINESS)
+	// monta o array PARAMIXB sem o tipo do documento na posicao [2]. Com
+	// isso "cTipo := PARAMIXB[2]" passa a receber a DATA de emissao, e a
+	// comparacao "cTipo == '1'" abaixo dispara o erro de runtime
+	// "type mismatch on compare" (registrado no LOG de producao na
+	// versao compilada de 18/10/2017). Normalizamos os parametros antes
+	// de qualquer comparacao para tornar a rotina robusta a esse cenario,
+	// sem alterar o fluxo manual (FISA022) que ja envia cTipo como string.
+	If ValType( cTipo ) == "D"
+		If Empty( dDtEmiss )
+			dDtEmiss := cTipo   // preserva a data de emissao recebida
+		EndIf
+		cTipo := "1"            // emissao normal (fluxo de remessa automatica)
+	ElseIf ValType( cTipo ) <> "C"
+		cTipo := "1"
+	EndIf
+	cTipo := AllTrim( cTipo )
+
+	//-----------------------------------------------------------------
 	// Preenchimento do array de UFs (IBGE)
 	//-----------------------------------------------------------------
 	aadd( aUF, { "RO", "11" } )

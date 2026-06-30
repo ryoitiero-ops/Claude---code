@@ -105,6 +105,11 @@ User Function nfseXMLEnv( cTipo, dDtEmiss, cSerie, cNota, cClieFor, cLoja, cMotC
 	Local nRetDesc   := 0
 	Local nValTotPrd := 0
 
+	// Auxiliares para a normalizacao de parametros do PARAMIXB
+	Local aIXB       := {}
+	Local nLenIXB    := 0
+	Local nPosDt     := 0
+
 	Local lQuery     := .F.
 	Local lCalSol    := .F.
 	Local lEECFAT    := SuperGetMv("MV_EECFAT")
@@ -186,28 +191,71 @@ User Function nfseXMLEnv( cTipo, dDtEmiss, cSerie, cNota, cClieFor, cLoja, cMotC
 	Private nTotEstCrg   := 0  // Ente Tributante Estadual
 	Private nTotMunCrg   := 0  // Ente Tributante Municipal
 
-	DEFAULT cTipo    := PARAMIXB[2]
-	DEFAULT cSerie   := PARAMIXB[4]
-	DEFAULT cNota    := PARAMIXB[5]
-	DEFAULT cClieFor := PARAMIXB[6]
-	DEFAULT cLoja    := PARAMIXB[7]
+	//-----------------------------------------------------------------
+	// Normalizacao robusta dos parametros (PARAMIXB)
+	//-----------------------------------------------------------------
+	// PROBLEMA (LOG de producao, build 18/10/2017, linha 218):
+	//   A camada de remessa (NFSEXML / MONTAREMESSANFSE / AUTONFSEBUSINESS)
+	//   passou a montar o array PARAMIXB sem o tipo do documento na posicao
+	//   [2]. O mapeamento historico "cTipo := PARAMIXB[2]" entao recebia a
+	//   DATA de emissao e todos os demais indices ficavam deslocados em um.
+	//   A primeira comparacao "cTipo == '1'" disparava entao o erro de
+	//   runtime "type mismatch on compare" (Data vs Caractere).
+	//
+	// SOLUCAO (sem depender do fonte padrao):
+	//   Detectamos o layout do PARAMIXB em tempo de execucao ancorando na
+	//   posicao da DATA de emissao (unico elemento de tipo "D" do array),
+	//   o que torna a rotina compativel com os dois formatos conhecidos:
+	//     - Layout historico : {cCodMun, cTipo, dDtEmiss, cSerie, cNota, cClieFor, cLoja}  (Data em [3])
+	//     - Layout atual      : {cCodMun, dDtEmiss, cSerie, cNota, cClieFor, cLoja}         (Data em [2])
+	//   Para chamadas que ja enviam os parametros corretamente (ex.: fluxo
+	//   manual posicional) o bloco e inofensivo, pois so atua sobre o array.
+	If Type( "PARAMIXB" ) == "A"
+
+		aIXB    := PARAMIXB
+		nLenIXB := Len( aIXB )
+		nPosDt  := aScan( aIXB, { |x| ValType( x ) == "D" } )  // posicao da Data de emissao
+
+		Do Case
+			Case nPosDt == 2 .And. nLenIXB >= 6
+				// Layout atual: array sem cTipo, Data em [2]
+				If !( ValType( cTipo ) == "C" .And. AllTrim( cTipo ) $ "1|2|3" )
+					cTipo := "1"   // cTipo nao vem no array -> emissao normal
+				EndIf
+				dDtEmiss := aIXB[2]
+				cSerie   := aIXB[3]
+				cNota    := aIXB[4]
+				cClieFor := aIXB[5]
+				cLoja    := aIXB[6]
+
+			Case nPosDt == 3 .And. nLenIXB >= 7
+				// Layout historico: cTipo em [2], Data em [3]
+				DEFAULT cTipo    := aIXB[2]
+				DEFAULT dDtEmiss := aIXB[3]
+				DEFAULT cSerie   := aIXB[4]
+				DEFAULT cNota    := aIXB[5]
+				DEFAULT cClieFor := aIXB[6]
+				DEFAULT cLoja    := aIXB[7]
+
+			OtherWise
+				// Layout nao identificado: preserva o mapeamento historico
+				DEFAULT cTipo    := PARAMIXB[2]
+				DEFAULT cSerie   := PARAMIXB[4]
+				DEFAULT cNota    := PARAMIXB[5]
+				DEFAULT cClieFor := PARAMIXB[6]
+				DEFAULT cLoja    := PARAMIXB[7]
+		EndCase
+	EndIf
 
 	//-----------------------------------------------------------------
-	// Guarda de compatibilidade dos parametros (PARAMIXB)
+	// Blindagem final: cTipo deve ser sempre caractere antes da
+	// comparacao "cTipo == '1'" (evita "type mismatch on compare").
 	//-----------------------------------------------------------------
-	// A camada automatica de remessa (MONTAREMESSANFSE / AUTONFSEBUSINESS)
-	// monta o array PARAMIXB sem o tipo do documento na posicao [2]. Com
-	// isso "cTipo := PARAMIXB[2]" passa a receber a DATA de emissao, e a
-	// comparacao "cTipo == '1'" abaixo dispara o erro de runtime
-	// "type mismatch on compare" (registrado no LOG de producao na
-	// versao compilada de 18/10/2017). Normalizamos os parametros antes
-	// de qualquer comparacao para tornar a rotina robusta a esse cenario,
-	// sem alterar o fluxo manual (FISA022) que ja envia cTipo como string.
 	If ValType( cTipo ) == "D"
 		If Empty( dDtEmiss )
-			dDtEmiss := cTipo   // preserva a data de emissao recebida
+			dDtEmiss := cTipo   // preserva a data recebida indevidamente
 		EndIf
-		cTipo := "1"            // emissao normal (fluxo de remessa automatica)
+		cTipo := "1"
 	ElseIf ValType( cTipo ) <> "C"
 		cTipo := "1"
 	EndIf

@@ -532,25 +532,25 @@ User Function nfseXMLEnv( cTipo, dDtEmiss, cSerie, cNota, cClieFor, cLoja, cMotC
 				dbSetOrder(1)
 
 				#IFDEF TOP
-					lQuery    := .T.
+					lQuery  := .T.
 					cAliasSE1 := GetNextAlias()
 					BeginSql Alias cAliasSE1
 						COLUMN E1_VENCORI AS DATE
-						SELECT E1_FILIAL, E1_PREFIXO, E1_NUM, E1_PARCELA, E1_TIPO, E1_VENCORI, E1_VALOR, E1_ORIGEM,
-						       E1_CSLL, E1_COFINS, E1_PIS, E1_PIS, E1_IRRF, E1_INSS, E1_ISS, E1_MOEDA, E1_CLIENTE, E1_LOJA
+						SELECT E1_FILIAL,E1_PREFIXO,E1_NUM,E1_PARCELA,E1_TIPO,E1_VENCORI,E1_VALOR,E1_ORIGEM,E1_CSLL,E1_COFINS,E1_PIS,E1_PIS,E1_IRRF,E1_INSS,E1_ISS,E1_MOEDA,E1_CLIENTE,E1_LOJA
 						FROM %Table:SE1% SE1
 						WHERE
-						   SE1.E1_FILIAL  = %xFilial:SE1% AND
-						   SE1.E1_PREFIXO = %Exp:SF2->F2_PREFIXO% AND
-						   SE1.E1_NUM     = %Exp:SF2->F2_DUPL% AND
-						   ( ( SE1.E1_TIPO = %Exp:MVNOTAFIS% ) OR
-						     SE1.E1_TIPO IN ( %Exp:cTipoPcc% ) OR
-						     ( SE1.E1_ORIGEM = 'LOJA701' AND SE1.E1_TIPO IN ( %Exp:cWhere% ) ) ) AND
-						   SE1.%NotDel%
+						SE1.E1_FILIAL = %xFilial:SE1% AND
+						SE1.E1_PREFIXO = %Exp:SF2->F2_PREFIXO% AND 
+						SE1.E1_NUM = %Exp:SF2->F2_DUPL% AND 
+						((SE1.E1_TIPO = %Exp:MVNOTAFIS%) OR
+						 SE1.E1_TIPO IN (%Exp:cTipoPcc%) OR
+						 (SE1.E1_ORIGEM = 'LOJA701' AND SE1.E1_TIPO IN (%Exp:cWhere%))) AND
+						SE1.%NotDel%
 						ORDER BY %Order:SE1%
 					EndSql
+					
 				#ELSE
-					DbSeek( xFilial("SE1") + SF2->F2_PREFIXO + SF2->F2_DOC )
+					DbSeek(xFilial("SE1")+SF2->F2_PREFIXO+SF2->F2_DOC)
 				#ENDIF
 
 				While !Eof() .And. xFilial("SE1") == (cAliasSE1)->E1_FILIAL .And. ;
@@ -742,27 +742,26 @@ User Function nfseXMLEnv( cTipo, dDtEmiss, cSerie, cNota, cClieFor, cLoja, cMotC
 			dbSetOrder(3)
 
 			#IFDEF TOP
-				lQuery    := .T.
+				lQuery  := .T.
 				cAliasSD2 := GetNextAlias()
 				BeginSql Alias cAliasSD2
-					SELECT D2_FILIAL, D2_SERIE, D2_DOC, D2_CLIENTE, D2_LOJA, D2_COD, D2_TES, D2_NFORI,
-					       D2_SERIORI, D2_ITEMORI, D2_TIPO, D2_ITEM, D2_CF, D2_QUANT, D2_TOTAL, D2_DESCON,
-					       D2_VALFRE, D2_SEGURO, D2_PEDIDO, D2_ITEMPV, D2_DESPESA, D2_VALBRUT, D2_VALISS,
-					       D2_PRUNIT, D2_CLASFIS, D2_PRCVEN, D2_CODISS, D2_DESCZFR, D2_PREEMB, D2_BASEISS,
-					       D2_VALIMP1, D2_VALIMP2, D2_VALIMP3, D2_VALIMP4, D2_VALIMP5, D2_PROJPMS %Exp:cField%,
-					       D2_VALPIS, D2_VALCOF, D2_VALCSL, D2_VALIRRF, D2_VALINS, D2_ORIGLAN, D2_VALICM
+					SELECT D2_FILIAL,D2_SERIE,D2_DOC,D2_CLIENTE,D2_LOJA,D2_COD,D2_TES,D2_NFORI,D2_SERIORI,D2_ITEMORI,D2_TIPO,D2_ITEM,D2_CF,
+						D2_QUANT,D2_TOTAL,D2_DESCON,D2_VALFRE,D2_SEGURO,D2_PEDIDO,D2_ITEMPV,D2_DESPESA,D2_VALBRUT,D2_VALISS,D2_PRUNIT,
+						D2_CLASFIS,D2_PRCVEN,D2_CODISS,D2_DESCZFR,D2_PREEMB,D2_BASEISS,D2_VALIMP1,D2_VALIMP2,D2_VALIMP3,D2_VALIMP4,D2_VALIMP5,D2_PROJPMS %Exp:cField%,
+						D2_VALPIS,D2_VALCOF,D2_VALCSL,D2_VALIRRF,D2_VALINS,D2_ORIGLAN,D2_VALICM						
 					FROM %Table:SD2% SD2
 					WHERE
-					   SD2.D2_FILIAL  = %xFilial:SD2% AND
-					   SD2.D2_SERIE   = %Exp:SF2->F2_SERIE% AND
-					   SD2.D2_DOC     = %Exp:SF2->F2_DOC% AND
-					   SD2.D2_CLIENTE = %Exp:SF2->F2_CLIENTE% AND
-					   SD2.D2_LOJA    = %Exp:SF2->F2_LOJA% AND
-					   SD2.%NotDel%
+					SD2.D2_FILIAL = %xFilial:SD2% AND
+					SD2.D2_SERIE = %Exp:SF2->F2_SERIE% AND 
+					SD2.D2_DOC = %Exp:SF2->F2_DOC% AND 
+					SD2.D2_CLIENTE = %Exp:SF2->F2_CLIENTE% AND 
+					SD2.D2_LOJA = %Exp:SF2->F2_LOJA% AND 
+					SD2.%NotDel%
 					ORDER BY %Order:SD2%
 				EndSql
+					
 			#ELSE
-				DbSeek( xFilial("SD2") + SF2->F2_DOC + SF2->F2_SERIE + SF2->F2_CLIENTE + SF2->F2_LOJA )
+				DbSeek(xFilial("SD2")+SF2->F2_DOC+SF2->F2_SERIE+SF2->F2_CLIENTE+SF2->F2_LOJA)
 			#ENDIF
 
 			//---------------------------------------------------------
